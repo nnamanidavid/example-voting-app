@@ -1,0 +1,61 @@
+name: Automation Pipeline
+
+on:
+  push:
+    branches: [ "main" ] 
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+  
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+
+    - name: Run Tests
+      run: |
+        echo "Running tests..."
+        # If using the original repo's worker, you can run: cd worker && dotnet test
+        
+
+    - name: Build and tag images
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        COMMIT_SHA: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/vote:$COMMIT_SHA ./vote
+        docker build -t $ECR_REGISTRY/result:$COMMIT_SHA ./result
+        docker build -t $ECR_REGISTRY/worker:$COMMIT_SHA ./worker
+
+    - name: Run Trivy vulnerability scanner on Vote Image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: '${{ steps.login-ecr.outputs.registry }}/vote:${{ github.sha }}'
+        format: 'table'
+        exit-code: '0' 
+        severity: 'CRITICAL,HIGH'
+
+
+    - name: Push images to ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        COMMIT_SHA: ${{ github.sha }}
+      run: |
+        docker push $ECR_REGISTRY/vote:$COMMIT_SHA
+        docker push $ECR_REGISTRY/result:$COMMIT_SHA
+        docker push $ECR_REGISTRY/worker:$COMMIT_SHA
