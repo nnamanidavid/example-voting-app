@@ -1,7 +1,4 @@
 # base defines a base stage that uses the official python runtime base image
-<<<<<<< HEAD
-FROM python:3.11-slim AS base
-=======
 FROM python:3.11.9-slim AS base
 >>>>>>> c4ffea0 (first commit)
 
@@ -10,8 +7,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
-<<<<<<< HEAD
-=======
+
 
 RUN groupadd -g 10001 appgroup && \
     useradd -u 10001 -g appgroup -s /bin/sh -m appuser
@@ -28,8 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM base AS dev
 RUN pip install watchdog
 ENV FLASK_ENV=development
-<<<<<<< HEAD
-=======
+
 USER appuser
 >>>>>>> c4ffea0 (first commit)
 CMD ["python", "app.py"]
@@ -38,12 +33,7 @@ CMD ["python", "app.py"]
 FROM base AS final
 
 # Copy our code from the current folder to the working directory inside the container
-<<<<<<< HEAD
-COPY . .
 
-# Make port 80 available for links and/or publish
-EXPOSE 80
-=======
 COPY --chown=appuser:appgroup . .
 
 
