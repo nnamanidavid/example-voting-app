@@ -1,0 +1,12 @@
+vote:
+  image:
+    repository: dockersamples/examplevotingapp_vote
+    tag: latest
+result:
+  image:
+    repository: dockersamples/examplevotingapp_result
+    tag: latest
+worker:
+  image:
+    repository: dockersamples/examplevotingapp_worker
+    tag: latest

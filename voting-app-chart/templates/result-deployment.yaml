@@ -15,8 +15,8 @@ spec:
         app: result
     spec:
       containers:
-      - image: dockersamples/examplevotingapp_result
+      - image: "{{ .Values.result.image.repository }}:{{ .Values.result.image.tag }}"
         name: result
         ports:
-        - containerPort: 80
+        - containerPort: 4000
           name: result
