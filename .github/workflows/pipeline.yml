@@ -59,3 +59,22 @@ jobs:
         docker push $ECR_REGISTRY/vote:$COMMIT_SHA
         docker push $ECR_REGISTRY/result:$COMMIT_SHA
         docker push $ECR_REGISTRY/worker:$COMMIT_SHA
+
+
+
+    - name: Update Kubeconfig
+      run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name voting-app-cluster
+
+
+    - name: Deploy with Helm
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        COMMIT_SHA: ${{ github.sha }}
+      run: |
+        helm upgrade --install voting-release ./voting-app-chart \
+          --set vote.image.repository=$ECR_REGISTRY/vote \
+          --set vote.image.tag=$COMMIT_SHA \
+          --set result.image.repository=$ECR_REGISTRY/result \
+          --set result.image.tag=$COMMIT_SHA \
+          --set worker.image.repository=$ECR_REGISTRY/worker \
+          --set worker.image.tag=$COMMIT_SHA
